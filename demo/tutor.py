@@ -1,8 +1,8 @@
-"""Minimal Claude-powered adaptive tutor demo.
+"""Adaptive tutor demo with a zero-setup local mode and optional Claude mode.
 
 Usage:
-    export ANTHROPIC_API_KEY=sk-ant-...
-    python tutor.py                                    # xiaohe, no profile
+    python tutor.py                                    # works without an API key
+    export ANTHROPIC_API_KEY=sk-ant-...                # optional: use Claude
     python tutor.py --tutor zhouzhou                   # switch persona
     python tutor.py --profile ../examples/learner-profile.example.json
 
@@ -28,8 +28,6 @@ import json
 import os
 import sys
 from pathlib import Path
-
-import anthropic
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PROMPTS_DIR = REPO_ROOT / "prompts"
@@ -74,7 +72,13 @@ def load_system_prompt(tutor: str, profile: dict | None) -> list[dict]:
 
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Adaptive tutor demo (Claude API)")
+    p = argparse.ArgumentParser(description="Adaptive tutor demo")
+    p.add_argument(
+        "--mode",
+        choices=("auto", "local", "anthropic"),
+        default="auto",
+        help="Backend: auto uses Claude when a key exists, otherwise local.",
+    )
     p.add_argument(
         "--tutor",
         choices=VALID_TUTORS,
@@ -96,6 +100,67 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
+def local_reply(tutor: str, user: str, turn: int) -> str:
+    """Return a useful, deterministic coaching prompt without external services.
+
+    This intentionally does not pretend to be a language model. It provides a
+    small guided learning loop so a fresh clone is immediately runnable.
+    """
+    text = user.strip()
+    if turn == 1:
+        openings = {
+            "xiaohe": "好，我们慢慢来。先不求一次学完。",
+            "zhouzhou": "收到。先把目标和验收标准钉死，再开始。",
+            "zhiyuan": "有意思。我们先找出你真正想弄明白的那个问题。",
+        }
+        return (
+            f"{openings[tutor]}\n\n"
+            f"你提到：‘{text}’。请再告诉我两件事：\n"
+            "1. 你希望学完后能独立完成什么？\n"
+            "2. 你现在最卡的一点是什么？"
+        )
+
+    if any(word in text for word in ("不会", "不懂", "卡", "太难", "没明白")):
+        switches = {
+            "xiaohe": "没关系，这说明刚才的入口不合适。我们把任务缩小：请贴出一个最具体的例子，或只说第一个看不懂的词。",
+            "zhouzhou": "先停止往后赶。请指出第一个断点，并写出你已经确定的事实；我们从断点重做，做到能复述为止。",
+            "zhiyuan": "先不听更多解释。请给出一个反例，或告诉我：哪条前提一变，你原来的理解就会失效？",
+        }
+        return switches[tutor]
+
+    if any(word in text for word in ("学会", "懂了", "明白了", "完成了")):
+        checks = {
+            "xiaohe": "很好。我们做一个轻量验收：不用看资料，用自己的话讲一遍核心思路，再举一个新例子。",
+            "zhouzhou": "开始验收：关掉资料，独立完成一道同类型新题，并解释每一步为什么成立。答错就订正后重做。",
+            "zhiyuan": "先别下结论。请说出这个结论的适用边界，再构造一个它不成立的情境。",
+        }
+        return checks[tutor]
+
+    prompts = {
+        "xiaohe": "我记下了。把下一步压缩成十分钟内能完成的小动作：请先写一个例子，然后说说哪一步最费劲。",
+        "zhouzhou": "继续。请给出一个可检查的答案或产物，不只描述感受；我会按你最初的目标验收。",
+        "zhiyuan": "先提出你的猜想：如果这个判断是错的，最可能被哪个例子推翻？请从那个例子开始验证。",
+    }
+    return prompts[tutor]
+
+
+def run_local(tutor: str, profile: dict | None) -> None:
+    print(f"[tutor={tutor}, profile={'yes' if profile else 'no'}, mode=local]")
+    print("无需 API Key。本地模式使用内置教学流程，不具备大模型的自由问答能力。")
+    print("按 Ctrl-C 或输入空行退出。\n")
+    turn = 0
+    while True:
+        try:
+            user = input("你 > ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            break
+        if not user:
+            break
+        turn += 1
+        print(f"{tutor} > {local_reply(tutor, user, turn)}\n")
+
+
 def load_profile(path: Path | None) -> dict | None:
     if path is None:
         return None
@@ -107,12 +172,17 @@ def load_profile(path: Path | None) -> dict | None:
         sys.exit(f"Profile is not valid JSON: {e}")
 
 
-def run() -> None:
-    args = parse_args()
+def run_anthropic(args: argparse.Namespace, profile: dict | None) -> None:
     if not os.environ.get("ANTHROPIC_API_KEY"):
-        sys.exit("ANTHROPIC_API_KEY is not set. See .env.example.")
+        sys.exit("Anthropic mode requires ANTHROPIC_API_KEY. Use --mode local instead.")
+    try:
+        import anthropic
+    except ImportError:
+        sys.exit(
+            "Anthropic SDK is not installed. Run: "
+            "python -m pip install -r demo/requirements.txt"
+        )
 
-    profile = load_profile(args.profile)
     system_blocks = load_system_prompt(args.tutor, profile)
     client = anthropic.Anthropic()
     messages: list[dict] = []
@@ -157,6 +227,19 @@ def run() -> None:
             f"  [usage: in={u.input_tokens} out={u.output_tokens} "
             f"cache_read={cached} cache_write={written}]\n"
         )
+
+
+def run() -> None:
+    args = parse_args()
+    profile = load_profile(args.profile)
+    mode = args.mode
+    if mode == "auto":
+        mode = "anthropic" if os.environ.get("ANTHROPIC_API_KEY") else "local"
+
+    if mode == "local":
+        run_local(args.tutor, profile)
+    else:
+        run_anthropic(args, profile)
 
 
 if __name__ == "__main__":

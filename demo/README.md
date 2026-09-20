@@ -1,21 +1,45 @@
-# 60-line 演示
+# 可直接运行的演示
 
-一个能跑起来的最小闭环：把学习契约 + 三位老师角色 + 学习者画像喂给 Claude，跑一场多轮对话。
+一个能直接跑起来的最小闭环。没有 API Key 时使用内置的本地引导流程；配置了 Anthropic API Key 后，会自动把学习契约、老师角色和学习者画像交给 Claude，进行自由多轮对话。
 
-## 安装
+## 直接运行（无需安装、无需 API Key）
+
+在仓库根目录执行：
+
+```sh
+python3 demo/tutor.py
+```
+
+本地模式是一个轻量、确定性的教学引导器，不会冒充大模型，也不具备自由知识问答能力。它用于让刚拉取的项目立即可体验。
+
+切换老师或携带档案：
+
+```sh
+python3 demo/tutor.py --tutor zhouzhou
+python3 demo/tutor.py --tutor zhiyuan --profile examples/learner-profile.example.json
+```
+
+## 可选：启用 Claude 完整对话
 
 ```sh
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env  # 填入你的 ANTHROPIC_API_KEY
 source .env
+python tutor.py
 ```
 
 ## 用法
 
 ```sh
-# 首次会话，默认小禾老师，无档案
+# 自动选择：有密钥用 Claude，无密钥用本地模式
 python tutor.py
+
+# 明确指定本地模式
+python tutor.py --mode local
+
+# 明确指定 Claude（缺少密钥时会给出提示）
+python tutor.py --mode anthropic
 
 # 切换到舟舟老师
 python tutor.py --tutor zhouzhou

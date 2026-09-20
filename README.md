@@ -51,8 +51,8 @@ outputs/                            设计源文档（读这个可以理解为�
 
 evaluation.md                       12 项指标 + 4 场景 + 8 停止条件的评审清单
 
-demo/                               可选：想通过 Anthropic Claude API 跑，用它
-├── tutor.py                        （需要 ANTHROPIC_API_KEY，普通用户可以忽略）
+demo/                               可直接运行的命令行体验
+├── tutor.py                        无密钥用本地模式，有密钥自动使用 Claude
 ├── requirements.txt
 ├── .env.example
 └── README.md
@@ -75,9 +75,11 @@ A：正确率不等于掌握。当场答对可能只是短时记忆，真正的�
 **Q：想改 prompt 或做产品对齐怎么办？**
 A：`outputs/` 里有设计的原文档（契约 v3 + 老师角色 v2）；`evaluation.md` 是评审用的 12 项指标 + 停止条件——**任一停止条件触发 = 回退**。三位老师的差异必须体现在"教学动作"上，不能只体现在"语气"上。
 
-## 可选：想通过 API 自动化的开发者
+## 可选：运行命令行演示或通过 API 自动化
 
-如果你在做产品集成、要跑批测试、想把老师接到自己的系统里，[`demo/`](demo/) 里有一份基于 Anthropic Claude API 的 Python demo（Opus 4.7 + adaptive thinking + prompt caching + streaming），需要自己的 `ANTHROPIC_API_KEY`。普通使用不需要看它。
+直接执行 `python3 demo/tutor.py` 即可进入无需密钥的本地引导模式。它不具备大模型的自由问答能力，但能演示三位老师不同的教学动作。
+
+如果你在做产品集成、要跑批测试、想把老师接到自己的系统里，[`demo/`](demo/) 也支持 Anthropic Claude API（Opus 4.7 + adaptive thinking + prompt caching + streaming）；配置 `ANTHROPIC_API_KEY` 后，程序会自动启用完整模型。
 
 ## 复审触发点
 
