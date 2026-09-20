@@ -1,115 +1,83 @@
 # 专属自适应老师（Adaptive Personal Tutor）
 
-一套用于构建"了解—测试—动态适应"型 AI 学习陪伴的规范集合。它不是一个应用，而是一份可以直接喂给大模型、也可以被产品团队用来对齐的**教学契约**、**角色定义**、**评审清单**和**能跑起来的 Demo**。
+一套可以直接拷进 **ChatGPT / Claude / 豆包 / Gemini / DeepSeek / Kimi** 等任何大模型对话框的**教学 prompt**。不需要 API key，不需要装东西，不需要注册任何服务。
 
-版本：契约 v3 / 老师角色 v2 · 日期：2026-09-20 · 状态：已批准，等待真实使用验证。
+版本：契约 v3 / 老师角色 v2 · 状态：已批准，等待真实使用验证。
 
-## 这套 skill 想解决什么
+## 用法（最快 30 秒）
 
-把常见的"AI 学习助手"从**一份固定课程 + 一堆问卷 + 一个笼统的成绩**，升级成一位真正能承接进度的老师：
+打开你常用的大模型对话（ChatGPT、Claude.ai、豆包、Kimi、DeepSeek……都可以），然后：
 
-- 会先花两三次对话**了解学习者**，而不是直接开讲。
-- 用**可检验的证据**判断"学会了没有"，不用"你自己觉得懂了吗"糊弄过关。
-- 跨会话**记得上次卡在哪、答应了什么、什么该复习**。
-- 遇到卡点会**换教法**，而不是把同一种讲法讲得更慢。
-- 允许学习者按今天的心情**换一位老师**：温柔陪伴（小禾）、严格要求（舟舟）、启发探索（知远）。
+1. 从下面三位老师里挑一位：
 
-## 仓库结构
+   - [`prompts/xiaohe.md`](prompts/xiaohe.md) —— **小禾老师**（温柔陪伴）：适合基础薄弱、被过挫败、容易被压力劝退的时候。
+   - [`prompts/zhouzhou.md`](prompts/zhouzhou.md) —— **舟舟老师**（严格要求）：适合有明确目标 / 截止日期、缺执行和监督的时候。
+   - [`prompts/zhiyuan.md`](prompts/zhiyuan.md) —— **知远老师**（启发探索）：适合已有基础、更看重"想通"而不是"记住"的时候。
+
+2. 把选中文件的**全部内容**复制粘贴到对话里作为**第一条消息**（或者，如果对话工具有 "system prompt" / "自定义指令" / "角色设定" 字段，就贴在那里）。
+
+3. 开始正常聊——问问题、说卡在哪、说今天想学什么，老师会承接。
+
+**跨会话承接**：想让老师"记住上次进度"？把 [`examples/learner-profile.example.json`](examples/learner-profile.example.json) 里的 JSON 也贴进对话（可以作为第一条消息里 prompt 之后的一段，或者第二条消息发过去）。老师会把它当成"上次的档案"，从上次卡住的地方接着来。想自己写一份档案，看 [`schemas/learner-profile.schema.json`](schemas/learner-profile.schema.json) 的字段定义。
+
+**换老师**：另开一段对话，贴另一位老师的 prompt。三位老师共享同一套画像逻辑，所以 profile JSON 是通用的。
+
+## 这套 prompt 到底改了什么
+
+普通"AI 学习助手"的三个痛点：**开场问卷太长 / 说"你自己觉得懂了吗"糊弄验收 / 每次都从零开始**。这套 prompt 逐个解掉：
+
+- **不预设固定课程**：老师会先花两三次对话**了解你**——你怎么学得进去、什么时段能学、什么算学会了——才开始安排。
+- **验收先行**：每节学习**开始前**就说清楚"什么样算过关"，事后不能改口。同一内容还要通过**延迟验收**（隔几天再验一次）才算真的会。
+- **卡壳时换教法**：不会把同一种讲法讲得更慢；会切换到另一种"认知入口"（例子 / 概念 / 类比 / 动手 / 问题 先行）。
+- **三种严格度可选**：小禾允许"今天只做一点"；舟舟"错完必须重做到对"；知远"不给答案，让你自己发现矛盾"。选择 = 你今天希望被怎么对待。
+
+## 仓库里都有什么
 
 ```
-outputs/                              # 原始契约文档（v3 + v2）
+prompts/               <── 拷进任何 LLM 对话框直接用
+├── xiaohe.md          小禾老师（温柔陪伴）
+├── zhouzhou.md        舟舟老师（严格要求）
+└── zhiyuan.md         知远老师（启发探索）
+
+examples/
+└── learner-profile.example.json    一份填过的档案样例，用于跨会话承接
+
+schemas/
+└── learner-profile.schema.json     档案的字段定义
+
+outputs/                            设计源文档（读这个可以理解为什么这么做）
 ├── adaptive-personal-tutor-learning-contract.md
 └── three-tutor-personas.md
 
-prompts/                              # ready-to-paste system prompts
-├── _shared_contract.md               # 三位老师共享的底层契约
-├── xiaohe.md                         # 小禾老师
-├── zhouzhou.md                       # 舟舟老师
-└── zhiyuan.md                        # 知远老师
+evaluation.md                       12 项指标 + 4 场景 + 8 停止条件的评审清单
 
-schemas/
-└── learner-profile.schema.json       # 学习者画像 JSON Schema
-
-examples/
-└── learner-profile.example.json      # 一份真实填过的档案样例
-
-evaluation.md                         # 12 项指标 + 4 场景 + 8 停止条件的评审清单
-
-demo/                                 # 能跑起来的最小 Python demo
-├── tutor.py                          # 60 行，anthropic SDK + prompt caching + adaptive thinking
+demo/                               可选：想通过 Anthropic Claude API 跑，用它
+├── tutor.py                        （需要 ANTHROPIC_API_KEY，普通用户可以忽略）
 ├── requirements.txt
 ├── .env.example
 └── README.md
 ```
 
-## 快速上手
+## 常见问题
 
-### A. 只想读文档、拷进你自己的 prompt
+**Q：粘贴 prompt 后模型说"作为一个 AI 我不能扮演老师"怎么办？**
+A：多数情况是把 prompt 贴到了"用户消息"位置而不是"系统提示"。如果工具没有系统提示位，直接以 prompt 作为**对话的第一条消息**发出去、然后**接一条**"好的，那我们开始吧"，多数模型会自然承接。ChatGPT / 豆包 / Kimi / DeepSeek / Claude.ai 都实测可用。
 
-1. 打开 `prompts/_shared_contract.md`，作为 system 提示的前半段。
-2. 从 `prompts/xiaohe.md` / `zhouzhou.md` / `zhiyuan.md` 里选一位老师，拼在后半段。
-3. 可选：把 `examples/learner-profile.example.json` 作为跨会话承接的样例塞进去。
+**Q：能不能同时用三位老师？**
+A：一段对话里只用一位。想切换就另开一段对话贴新的 prompt——把 profile JSON 也带过去，进度不丢。
 
-### B. 直接跑 Demo
+**Q：JSON profile 里"陈述 / 观察 / 推测"这些字段是什么意思？**
+A：档案要区分事实和假设——学习者说过的话是"陈述"，教学中观察到的是"证据"，老师的假设是"推测"。**推测不得被当作事实使用**。这是让老师不乱贴标签的关键。详细字段见 `schemas/learner-profile.schema.json`。
 
-```sh
-cd demo
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env  # 填入 ANTHROPIC_API_KEY
-source .env
+**Q：为什么强调"验收先行"和"延迟验收"？**
+A：正确率不等于掌握。当场答对可能只是短时记忆，真正的应用/迁移能力要靠**换一段时间再问一次、换一个情境再问一次**才能露出来。详细在 `outputs/adaptive-personal-tutor-learning-contract.md`。
 
-python tutor.py                                    # 小禾，无档案
-python tutor.py --tutor zhouzhou                   # 严格模式
-python tutor.py --profile ../examples/learner-profile.example.json  # 带上次档案
-```
+**Q：想改 prompt 或做产品对齐怎么办？**
+A：`outputs/` 里有设计的原文档（契约 v3 + 老师角色 v2）；`evaluation.md` 是评审用的 12 项指标 + 停止条件——**任一停止条件触发 = 回退**。三位老师的差异必须体现在"教学动作"上，不能只体现在"语气"上。
 
-Demo 用了 `claude-opus-4-7` + adaptive thinking + prompt caching + streaming。每轮对话会打印 token 使用量和缓存命中，方便验证承接是否真的读到了。
+## 可选：想通过 API 自动化的开发者
 
-### C. 用作评审清单
-
-对任何一段真实的老师-学习者对话，用 `evaluation.md` 打分。12 项指标全部达标 = 通过；任一守护指标违反 = 不通过。
-
-## 核心设计（一屏速览）
-
-### 1. 必须先建立三类画像
-
-前两三次对话里通过自然交流建立，写入长期档案。**未建立前不得**为学习者安排"每天几点学"或复习时段。
-
-- **认知入口偏好**：例子 / 概念 / 类比 / 动手 / 问题 先行。
-- **每日节奏与时段**：单次时长、频率、可学时段、中断成本、休息偏好。
-- **验收方式**：复述 / 造新例子 / 教一遍 / 迁移题 / 改错 / 动手复现。
-
-### 2. 验收先行、延迟验收
-
-- 验收方式**在学习开始前**就说清楚，不能事后临时决定"这样算过"。
-- 至少通过一次**延迟验收**才计入"应用/迁移"层。
-- "感觉懂了"不算掌握证据。
-
-### 3. 三位可切换老师，差异在动作层
-
-| 老师 | 教学哲学 | 卡点时默认动作 |
-|---|---|---|
-| 小禾（温柔陪伴） | 先保住"愿意继续"再谈进度 | 换讲法 → 拆更小 → 允许今天只做这一点 |
-| 舟舟（严格要求） | 含糊过关是浪费你时间 | 要求再试一次 → 指出具体偏差 → 错完必须重做到对 |
-| 知远（启发探索） | 想明白一次胜过被讲明白十次 | 反问"你到哪一步了" → 换条件让学习者自己发现矛盾 |
-
-三人共享同一份学习者画像，但**如何采集、如何用、验收严格程度**必须显著不同——否则视为"只改了名字"。
-
-### 4. 12 项首轮指标 + 8 条停止条件
-
-见 `evaluation.md`。任一停止条件触发 = 暂停持久个性化功能。
-
-## 不做什么
-
-为了让 MVP 可落地，本 skill **暂不实现**：
-
-- 完整 BKT / FSRS 掌握度算法。
-- 学习者画像的自动更新（demo 里画像是只读的）。
-- 自动化提醒与外部数据库集成。
-- 隐藏遥测——首轮只使用明确授权的档案 + 人工测试。
-
-以上都留在契约的"复审触发点"里，等真实使用证据够了再考虑。
+如果你在做产品集成、要跑批测试、想把老师接到自己的系统里，[`demo/`](demo/) 里有一份基于 Anthropic Claude API 的 Python demo（Opus 4.7 + adaptive thinking + prompt caching + streaming），需要自己的 `ANTHROPIC_API_KEY`。普通使用不需要看它。
 
 ## 复审触发点
 

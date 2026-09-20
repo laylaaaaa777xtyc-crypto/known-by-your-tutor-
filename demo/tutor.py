@@ -7,8 +7,7 @@ Usage:
     python tutor.py --profile ../examples/learner-profile.example.json
 
 Reads:
-    - prompts/_shared_contract.md         (shared底层契约)
-    - prompts/<tutor>.md                  (角色 prompt)
+    - prompts/<tutor>.md                  (self-contained system prompt)
     - optional: <profile.json>            (跨会话承接)
 
 Design choices worth noting:
@@ -41,23 +40,17 @@ MODEL = "claude-opus-4-7"
 def load_system_prompt(tutor: str, profile: dict | None) -> list[dict]:
     """Build the system message as a list of text blocks with cache_control.
 
-    Placement: shared contract + persona are frozen across turns, so we
-    cache them together. The (optional) profile block goes AFTER the cache
+    Placement: the persona prompt is frozen across turns, so we mark it
+    with cache_control. The (optional) profile block goes AFTER the cache
     breakpoint because it's session-specific and would otherwise invalidate
     the shared prefix across different learners.
     """
-    shared = (PROMPTS_DIR / "_shared_contract.md").read_text(encoding="utf-8")
     persona = (PROMPTS_DIR / f"{tutor}.md").read_text(encoding="utf-8")
 
     blocks: list[dict] = [
         {
             "type": "text",
-            "text": (
-                "# 底层契约（三位老师共享）\n\n"
-                f"{shared}\n\n---\n\n"
-                "# 你当前扮演的老师\n\n"
-                f"{persona}"
-            ),
+            "text": persona,
             "cache_control": {"type": "ephemeral"},
         }
     ]
