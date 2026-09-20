@@ -1,0 +1,72 @@
+{
+  "learner_id": "learner-2f3a1c",
+  "display_name": "小夏",
+  "consent": {
+    "granted": true,
+    "granted_at": "2026-09-18T13:20:00+08:00",
+    "notes": "同意保存学习相关记录；不同意保存任何身份信息。"
+  },
+  "preferred_tutor": "xiaohe",
+  "cognitive_entry": {
+    "default": "example_first",
+    "source": "declared",
+    "fallback_order": ["analogy_first", "concept_first"],
+    "updated_at": "2026-09-20T10:12:00+08:00"
+  },
+  "daily_rhythm": {
+    "session_minutes": 25,
+    "frequency_per_day": "once",
+    "available_slots": ["evening"],
+    "blocked_slots": ["morning"],
+    "interruption_cost": "high",
+    "break_style": "pomodoro",
+    "source": "declared",
+    "updated_at": "2026-09-20T10:12:00+08:00"
+  },
+  "acceptance": {
+    "default_method": "new_example",
+    "per_topic": {
+      "英文技术阅读": "teach_back"
+    },
+    "delayed_verification_required": true
+  },
+  "topics": [
+    {
+      "name": "递归的基本模型",
+      "level": "understand",
+      "last_studied_at": "2026-09-20T21:05:00+08:00",
+      "notes": "能被动跟上讲解，但换新例子会卡住。"
+    },
+    {
+      "name": "英文技术阅读",
+      "level": "retain",
+      "last_studied_at": "2026-09-19T21:40:00+08:00"
+    }
+  ],
+  "weak_points": [
+    {
+      "topic": "递归的基本模型",
+      "description": "把'递归调用自身'和'循环'混着说，会用递归解简单题，但看不出问题何时能用递归、何时不能。",
+      "observed_at": "2026-09-20T21:05:00+08:00",
+      "resolved": false
+    }
+  ],
+  "review_queue": [
+    {
+      "topic": "递归的基本模型",
+      "due_at": "2026-09-22T21:00:00+08:00",
+      "last_result": "pending"
+    }
+  ],
+  "last_commitment": {
+    "text": "下次来的时候，先给我一个新的、不是老师举过的递归例子；然后我们一起看看这个例子能不能不用递归也解。",
+    "made_at": "2026-09-20T21:40:00+08:00"
+  },
+  "hypotheses": [
+    {
+      "text": "'例子先行'对小夏在数学类主题上有效，但在语言类主题上她其实更偏概念先行。",
+      "made_at": "2026-09-20T21:38:00+08:00",
+      "evidence_needed": "下次遇到语言类新概念时观察是否主动要定义。"
+    }
+  ]
+}

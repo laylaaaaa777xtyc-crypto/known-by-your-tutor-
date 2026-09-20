@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/learner-profile.schema.json",
+  "title": "LearnerProfile",
+  "description": "自适应老师所需的学习者长期画像。字段分类遵循学习契约 v3：陈述 / 证据 / 推测 / 误区 / 复习。缺任一大类画像时，闭环无法成立。",
+  "type": "object",
+  "required": ["learner_id", "consent", "cognitive_entry", "daily_rhythm", "acceptance"],
+  "additionalProperties": false,
+  "properties": {
+    "learner_id": {
+      "type": "string",
+      "description": "本地生成的匿名 ID；不要用邮箱、手机号或真名。"
+    },
+    "display_name": {
+      "type": "string",
+      "description": "可选，学习者希望老师如何称呼。"
+    },
+    "consent": {
+      "type": "object",
+      "description": "持久化学习档案的授权状态。未授权时不得写档案。",
+      "required": ["granted", "granted_at"],
+      "additionalProperties": false,
+      "properties": {
+        "granted": { "type": "boolean" },
+        "granted_at": { "type": "string", "format": "date-time" },
+        "notes": { "type": "string" }
+      }
+    },
+    "preferred_tutor": {
+      "type": "string",
+      "enum": ["xiaohe", "zhouzhou", "zhiyuan"],
+      "description": "当前默认老师。切换后必须立即生效。"
+    },
+    "cognitive_entry": {
+      "type": "object",
+      "description": "认知入口偏好——遇到新概念时最容易学进去的方式。",
+      "required": ["default", "source"],
+      "additionalProperties": false,
+      "properties": {
+        "default": {
+          "type": "string",
+          "enum": ["example_first", "concept_first", "analogy_first", "hands_on_first", "problem_first"]
+        },
+        "source": {
+          "type": "string",
+          "enum": ["declared", "observed", "hypothesis"],
+          "description": "声明 / 观察证据 / 老师推测。推测不得当作事实使用。"
+        },
+        "fallback_order": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["example_first", "concept_first", "analogy_first", "hands_on_first", "problem_first"]
+          },
+          "description": "卡壳时的备用入口顺序。"
+        },
+        "updated_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "daily_rhythm": {
+      "type": "object",
+      "description": "每日节奏与时段。未采集前不得为学习者安排任何'每天几点学'的建议。",
+      "additionalProperties": false,
+      "properties": {
+        "session_minutes": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 180,
+          "description": "单次能保持专注的分钟数。"
+        },
+        "frequency_per_day": {
+          "type": "string",
+          "enum": ["once", "multiple_slots", "irregular"]
+        },
+        "available_slots": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["morning", "noon", "afternoon", "evening", "late_night"] }
+        },
+        "blocked_slots": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["morning", "noon", "afternoon", "evening", "late_night"] }
+        },
+        "interruption_cost": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "description": "被打断后重启的难度。"
+        },
+        "break_style": {
+          "type": "string",
+          "enum": ["pomodoro", "task_based", "flexible"]
+        },
+        "source": {
+          "type": "string",
+          "enum": ["declared", "observed", "hypothesis"]
+        },
+        "updated_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "acceptance": {
+      "type": "object",
+      "description": "验收方式。必须在学习开始前就说清楚，事后不改。",
+      "required": ["default_method"],
+      "additionalProperties": false,
+      "properties": {
+        "default_method": {
+          "type": "string",
+          "enum": ["restate", "new_example", "teach_back", "transfer_task", "correct_error", "hands_on_reproduce"]
+        },
+        "per_topic": {
+          "type": "object",
+          "description": "特定主题的例外验收方式；key 是主题名。",
+          "additionalProperties": {
+            "type": "string",
+            "enum": ["restate", "new_example", "teach_back", "transfer_task", "correct_error", "hands_on_reproduce"]
+          }
+        },
+        "delayed_verification_required": {
+          "type": "boolean",
+          "description": "是否强制延迟验收才计入应用/迁移层。",
+          "default": true
+        }
+      }
+    },
+    "topics": {
+      "type": "array",
+      "description": "正在学习的主题列表。每个主题独立维护状态分层。",
+      "items": {
+        "type": "object",
+        "required": ["name", "level"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "level": {
+            "type": "string",
+            "enum": ["understand", "retain", "apply", "transfer"],
+            "description": "理解 / 保持 / 应用 / 迁移。不合并成一个笼统的进度分数。"
+          },
+          "last_studied_at": { "type": "string", "format": "date-time" },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "weak_points": {
+      "type": "array",
+      "description": "验收中暴露的偏差，进入档案的薄弱点，安排复习。",
+      "items": {
+        "type": "object",
+        "required": ["description", "observed_at"],
+        "additionalProperties": false,
+        "properties": {
+          "topic": { "type": "string" },
+          "description": { "type": "string" },
+          "observed_at": { "type": "string", "format": "date-time" },
+          "resolved": { "type": "boolean", "default": false }
+        }
+      }
+    },
+    "review_queue": {
+      "type": "array",
+      "description": "到期复习项。老师默认按此队列提醒；小禾允许延后，舟舟必须到期完成，知远用新场景重问。",
+      "items": {
+        "type": "object",
+        "required": ["topic", "due_at"],
+        "additionalProperties": false,
+        "properties": {
+          "topic": { "type": "string" },
+          "due_at": { "type": "string", "format": "date-time" },
+          "last_result": {
+            "type": "string",
+            "enum": ["pending", "passed", "failed"]
+          }
+        }
+      }
+    },
+    "last_commitment": {
+      "type": "object",
+      "description": "上次会话结束时学习者做出的具体承诺——下次回来时老师承接的锚点。",
+      "additionalProperties": false,
+      "properties": {
+        "text": { "type": "string" },
+        "made_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "hypotheses": {
+      "type": "array",
+      "description": "老师的推测。不得当作事实使用；升级为陈述或观察需要具体证据。",
+      "items": {
+        "type": "object",
+        "required": ["text", "made_at"],
+        "additionalProperties": false,
+        "properties": {
+          "text": { "type": "string" },
+          "made_at": { "type": "string", "format": "date-time" },
+          "evidence_needed": { "type": "string" }
+        }
+      }
+    }
+  }
+}
