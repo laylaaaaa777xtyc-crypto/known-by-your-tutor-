@@ -2,6 +2,29 @@
 
 一套可以直接拷进 **ChatGPT / Claude / 豆包 / Gemini / DeepSeek / Kimi** 等任何大模型对话框的**教学 prompt**。不需要 API key，不需要装东西，不需要注册任何服务。
 
+本仓库同时是一个标准 **Agent Skill**：支持 Agent Skills 的智能体可以直接拉取仓库并读取根目录的 [`SKILL.md`](SKILL.md)，无需手工复制 prompt。原来的三位老师提示词仍然保留，可供普通聊天产品直接使用。
+
+## 作为 Agent Skill 使用（推荐）
+
+最简单的方式是把整个仓库克隆到智能体的 skills 目录，并将目录命名为 `adaptive-personal-tutor`：
+
+```bash
+git clone https://github.com/laylaaaaa777xtyc-crypto/known-by-your-tutor-.git adaptive-personal-tutor
+```
+
+如果智能体有专用 skills 目录，就在该目录中执行上面的命令；也可以先下载仓库，再把仓库文件夹移动到该目录。只要智能体支持 `SKILL.md` 约定，它就能自动发现这个技能。
+
+Codex 用户也可以使用内置安装器：
+
+```bash
+python3 install-skill-from-github.py \
+  --repo laylaaaaa777xtyc-crypto/known-by-your-tutor- \
+  --path . \
+  --name adaptive-personal-tutor
+```
+
+安装后，在新对话中直接说“用 adaptive-personal-tutor 教我概率论”或“帮我选一位老师并开始学习”即可。不同智能体的安装目录和命令可能不同，但技能本体不依赖 API、MCP 或特定模型。
+
 版本：契约 v3 / 老师角色 v2 · 状态：已批准，等待真实使用验证。
 
 ## 用法（最快 30 秒）
@@ -87,4 +110,3 @@ A：`outputs/` 里有设计的原文档（契约 v3 + 老师角色 v2）；`eval
 - 第一次发现错误记忆或删除失败；
 - 用户连续两次认为对话机械；
 - 准备加入自动提醒、外部数据库或复杂掌握度算法之前。
-
